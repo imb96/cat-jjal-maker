@@ -62,6 +62,9 @@
       }
 
       function Favorites({ favorites }) {
+        if (favorites.length === 0) {
+          return <div>사진 위 하트를 눌러 고양이 사진을 저장해 보세요!</div>;
+        }
         return (
           <ul className="favorites">
             {favorites.map((cat) => (
@@ -71,11 +74,12 @@
         );
       }
 
-      const MainCard = ({ img, onHeartClick }) => {
+      const MainCard = ({ img, onHeartClick, alreadyFavorite }) => {
+        const heartIcon = alreadyFavorite ? "💖" : "🤍";
         return (
           <div className="main-card">
             <img src={img} alt="고양이" width="400" />
-            <button onClick={onHeartClick}>🤍</button>
+            <button onClick={onHeartClick}>{heartIcon}</button>
           </div>
         );
       };
@@ -132,13 +136,16 @@
           "https://cataas.com//cat/5e9970351b7a400011744233/says/inflearn";
         const CAT3 =
           "https://cataas.com/cat/595f280b557291a9750ebf65/says/JavaScript";
-        const [counter, setCounter] = React.useState(
-          jsonLocalStorage.getItem("counter")
-        );
+
+        const [counter, setCounter] = React.useState(() => {
+          return jsonLocalStorage.getItem("counter");
+        });
         const [mainCat, setMainCat] = React.useState(CAT1);
-        const [favorites, setFavorites] = React.useState(
-          jsonLocalStorage.getItem("favorites") || []
-        );
+        const [favorites, setFavorites] = React.useState(() => {
+          return jsonLocalStorage.getItem("favorites") || [];
+        });
+
+        const alreadyFavorite = favorites.includes(mainCat);
 
         async function setInitialCat() {
           const newCat = await fetchCat("First cat");
@@ -152,24 +159,31 @@
 
         async function upDateMainCat(value) {
           const newCat = await fetchCat(value);
-
           setMainCat(newCat);
-          const nextCounter = counter + 1;
-          setCounter(nextCounter);
-          jsonLocalStorage.setItem("counter", nextCounter);
-        }
 
+          setCounter((prev) => {
+            const nextCounter = prev + 1;
+            jsonLocalStorage.setItem("counter", nextCounter);
+            return nextCounter;
+          });
+        }
         function handleHeartClick() {
           const nextFavorites = [...favorites, mainCat];
           setFavorites(nextFavorites);
           jsonLocalStorage.setItem("favorites", nextFavorites);
         }
 
+        const counterTitle = counter === null ? "" : counter + "번째 ";
+
         return (
           <div>
-            <Title>{counter}번째 고양이 가라사대</Title>
+            <Title>{counterTitle}고양이 가라사대</Title>
             <Form upDateMainCat={upDateMainCat} />
-            <MainCard img={mainCat} onHeartClick={handleHeartClick} />
+            <MainCard
+              img={mainCat}
+              onHeartClick={handleHeartClick}
+              alreadyFavorite={alreadyFavorite}
+            />
             <Favorites favorites={favorites} />
           </div>
         );
