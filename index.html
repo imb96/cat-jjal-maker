@@ -35,6 +35,15 @@
     ></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script type="text/babel">
+      const fetchCat = async (text) => {
+        const OPEN_API_DOMAIN = "https://cataas.com";
+        const response = await fetch(
+          `${OPEN_API_DOMAIN}/cat/says/${text}?json=true`
+        );
+        const responseJson = await response.json();
+        return `${OPEN_API_DOMAIN}/${responseJson.url}`;
+      };
+
       const jsonLocalStorage = {
         setItem: (key, value) => {
           localStorage.setItem(key, JSON.stringify(value));
@@ -98,7 +107,7 @@
             return;
           }
 
-          upDateMainCat();
+          upDateMainCat(value);
         };
 
         return (
@@ -131,8 +140,20 @@
           jsonLocalStorage.getItem("favorites") || []
         );
 
-        function upDateMainCat() {
-          setMainCat(CAT2);
+        async function setInitialCat() {
+          const newCat = await fetchCat("First cat");
+          console.log("new cat");
+          setMainCat(newCat);
+        }
+
+        React.useEffect(() => {
+          setInitialCat();
+        }, []);
+
+        async function upDateMainCat(value) {
+          const newCat = await fetchCat(value);
+
+          setMainCat(newCat);
           const nextCounter = counter + 1;
           setCounter(nextCounter);
           jsonLocalStorage.setItem("counter", nextCounter);
